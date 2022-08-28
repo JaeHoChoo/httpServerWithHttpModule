@@ -40,12 +40,12 @@ const httpRequestListener = function (request, response) {
     //endpoint를 추가하기 위해 가져오는것.
     //missiont 1. 회원가입 , 2. 계시물등록
     //endpoint를 구현하기위해서 메소드와 타겟 두개를 사용하는 방법밖에 없다.   
-    if (method === 'GET') {
+    if (method === "GET") {
           if (url === '/ping') {
               response.writeHead(200, {'Content-Type' : 'application/json'});
               response.end(JSON.stringify({message : 'pong'}));
           }
-      } else if (method === 'POST') { // (3)
+      } else if (method === "POST") { // (3)
           if (url === '/users/signup') {
               let body = ''; // (4)
               request.on('data', (data) => {body += data;}) // (5)
@@ -53,18 +53,38 @@ const httpRequestListener = function (request, response) {
               // stream을 전부 받아온 이후에 실행
               request.on('end', () => {  // (6)
                   const user = JSON.parse(body); //(7) 
-  
+                 
                   users.push({ // (8)
                       id : user.id,
                       name : user.name,
                       email: user.email,
-                      password : user.password
+                      password : user.password,
                     });
                   //
                   response.writeHead(200, {'Content-Type' : 'application/json'});
                   response.end(JSON.stringify({message : 'userCreated'})); // (9)
-              })
-      }
+              });
+          } else if(url === '/posts'){
+            let body = ''; // (4)
+            request.on('data', (data) => body += data);
+            request.on('end',()=>{
+                const post = JSON.parse(body);
+                const user = users.find((user) => user.id === post.userId);
+                if(user){
+                    post.push({
+                        id: post.id,
+                        name: post.title,
+                        content: post.content,
+                        userId: post.userId,
+                    });
+                    response.writeHead(201, {"Content-Type": "application/json"});
+                    response.end(JSON.stringify({ message: "ok!"}));
+                } else {
+                    response.writeHead(404, {"Content-Type": "application/json"});
+                    response.end(JSON.stringify({ message: "NOT FOUND"}));
+                }
+            });
+          }
     }
   };
   
